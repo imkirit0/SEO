@@ -10,3 +10,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# local-only notes (credentials etc.)
+*.local.md

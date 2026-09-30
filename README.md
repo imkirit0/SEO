@@ -42,6 +42,10 @@ Open http://localhost:3000, create your account, then go to **Team & Projects** 
 
 Deploy to Vercel (or any Node host), set the same environment variables, and add the production `/auth/callback` URL to Supabase's redirect list.
 
+## Accounts
+
+Logins for the team accounts (2 managers, 1 executive) are kept in `CREDENTIALS.local.md` on the setup machine. It is git-ignored and never pushed. Ask a manager for access, and change your temporary password after the first sign-in.
+
 ## Project structure
 
 ```
