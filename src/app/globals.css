@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-nav: var(--nav);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-idle: var(--idle);
+  --color-idle-soft: var(--idle-soft);
+}
+
+@theme {
+  --animate-pop: pop 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-fade: fade 0.2s ease-out;
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+:root {
+  --bg: #f5f9fc;
+  --surface: #ffffff;
+  --surface-2: #eef6fb;
+  --surface-3: #e0eef7;
+  --line: rgba(0, 59, 92, 0.08);
+  --line-strong: rgba(0, 59, 92, 0.15);
+  --ink: #002a42;
+  --ink-2: #2f5064;
+  --ink-3: #6d8797;
+  --accent: #004282;
+  --accent-2: #008ed0;
+  --accent-soft: #e8f8ff;
+  --accent-ink: #ffffff;
+  --ok: #178049;
+  --ok-soft: #e3f3ea;
+  --warn: #b37f00;
+  --warn-soft: #fff6d6;
+  --bad: #c8321f;
+  --bad-soft: #fff2ef;
+  --idle: #6d8797;
+  --idle-soft: #eef4f8;
+  --c-seo: #008ed0;
+  --c-smm: #ff7352;
+  --c-sem: #e0a800;
+  --c-ops: #003b5c;
+  --glow-1: rgba(0, 142, 208, 0.12);
+  --glow-2: rgba(225, 6, 0, 0.04);
+  --shadow: 0 1px 2px rgba(0, 42, 66, 0.05), 0 8px 24px -18px rgba(0, 42, 66, 0.25);
+  --brand: #e10600;
+  --brand-ink: #ffffff;
+  --nav: #004282;
+}
+
+.dark {
+  --bg: #021a28;
+  --surface: #052233;
+  --surface-2: #0a2c40;
+  --surface-3: #10374e;
+  --line: rgba(255, 255, 255, 0.065);
+  --line-strong: rgba(255, 255, 255, 0.11);
+  --ink: #eaf6fc;
+  --ink-2: #a9c5d4;
+  --ink-3: #6d8fa1;
+  --accent: #4cb8ec;
+  --accent-2: #b3e4f9;
+  --accent-soft: rgba(51, 180, 234, 0.13);
+  --accent-ink: #021a28;
+  --ok: #4fd18b;
+  --ok-soft: rgba(79, 209, 139, 0.12);
+  --warn: #ffc400;
+  --warn-soft: rgba(255, 196, 0, 0.12);
+  --bad: #ff7352;
+  --bad-soft: rgba(255, 115, 82, 0.13);
+  --idle: #7d8e95;
+  --idle-soft: rgba(255, 255, 255, 0.06);
+  --c-seo: #33b4ea;
+  --c-smm: #ff8c70;
+  --c-sem: #ffc400;
+  --c-ops: #8fb4c8;
+  --glow-1: rgba(51, 180, 234, 0.12);
+  --glow-2: rgba(255, 59, 48, 0.04);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px -20px rgba(0, 0, 0, 0.9);
+  --brand: #ff3b30;
+  --brand-ink: #ffffff;
+  --nav: #06304d;
+}
+
+@layer base {
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--accent-soft); color: var(--ink); }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+  .dark input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.55); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+}
+
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+/* G-TEC hero: white fading into royal blue, as on gteceducation.com */
+@utility gtec-hero {
+  background: linear-gradient(105deg, var(--surface) 40%, color-mix(in srgb, var(--nav) 55%, var(--surface)) 75%, var(--nav) 100%);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility desk-glow {
+  background:
+    radial-gradient(55% 60% at 15% 0%, var(--glow-1), transparent 70%),
+    radial-gradient(40% 55% at 95% 0%, var(--glow-2), transparent 70%);
+}
+
+@utility desk-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(70% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+@utility text-gradient {
+  background: linear-gradient(100deg, var(--ink) 20%, var(--accent) 60%, var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@layer components {
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  .data-table th {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--surface);
+    padding: 10px 14px;
+    text-align: left; white-space: nowrap;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .data-table td { padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--ink); }
+  .data-table tbody tr { transition: background-color 0.12s; }
+  .data-table tbody tr:hover td { background: var(--surface-2); }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
+  .data-table .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .data-table tfoot td { background: var(--surface-2); font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0; }
+
+  .cell-input {
+    width: 100%; background: transparent; border: 1px solid transparent; border-radius: 8px;
+    padding: 5px 8px; color: var(--ink); outline: none; transition: border-color 0.12s, background-color 0.12s;
+  }
+  .cell-input:hover { border-color: var(--line-strong); }
+  .cell-input:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+}
