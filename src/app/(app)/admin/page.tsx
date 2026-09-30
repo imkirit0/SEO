@@ -25,7 +25,7 @@ export default async function AdminPage() {
         </div>
       )}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <TeamPanel team={ctx.team} me={ctx.user.id} isManager={ctx.isManager} inviteEnabled={!!process.env.SUPABASE_SERVICE_ROLE_KEY} />
+        <TeamPanel team={ctx.team} me={ctx.user.id} isManager={ctx.isManager} createEnabled={!!process.env.SUPABASE_SERVICE_ROLE_KEY} />
         <ProjectsPanel projects={ctx.projects} isManager={ctx.isManager} />
       </div>
       <QuotaPanel quotas={(data ?? []) as Quota[]} isManager={ctx.isManager} />

@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Sign in' };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; mode?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const next = safeNext(params.next);
@@ -47,7 +47,7 @@ export default async function LoginPage({
               ))}
             </ul>
           </div>
-          <p className="text-xs text-white/60">The first account created becomes the desk’s manager.</p>
+          <p className="text-xs text-white/60">Accounts are created by your admin in Team &amp; Projects.</p>
         </div>
       </aside>
 
@@ -55,7 +55,6 @@ export default async function LoginPage({
         <div aria-hidden className="desk-glow pointer-events-none absolute inset-0 lg:hidden" />
         <LoginForm
           next={next}
-          initialMode={params.mode === 'signup' ? 'signup' : 'signin'}
           linkError={params.error === 'link'}
         />
       </main>

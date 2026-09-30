@@ -7,14 +7,12 @@ import { ArrowRight, Mail, MailCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/field';
-import { Segmented } from '@/components/ui/misc';
 
-type Mode = 'signin' | 'signup' | 'magic';
+type Mode = 'signin' | 'magic';
 
-export function LoginForm({ next, initialMode, linkError }: { next: string; initialMode: Mode; linkError: boolean }) {
+export function LoginForm({ next, linkError }: { next: string; linkError: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>(initialMode);
-  const [name, setName] = useState('');
+  const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,21 +33,8 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
         if (error) throw error;
         router.replace(next);
         router.refresh();
-      } else if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name.trim() }, emailRedirectTo: redirectTo },
-        });
-        if (error) throw error;
-        if (data.session) {
-          router.replace(next);
-          router.refresh();
-        } else {
-          setSent(`We sent a confirmation link to ${email}.`);
-        }
       } else {
-        const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+        const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo, shouldCreateUser: false } });
         if (error) throw error;
         setSent(`A sign-in link is on its way to ${email}.`);
       }
@@ -75,7 +60,6 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
 
   const titles: Record<Mode, [string, string]> = {
     signin: ['Welcome back', 'Sign in to your desk.'],
-    signup: ['Create your account', 'Join your team’s desk in under a minute.'],
     magic: ['Passwordless sign-in', 'We’ll email you a one-time link.'],
   };
 
@@ -84,22 +68,8 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
       <h1 className="text-2xl font-semibold tracking-tight">{titles[mode][0]}</h1>
       <p className="mt-1 text-sm text-ink-3">{titles[mode][1]}</p>
 
-      <Segmented
-        className="mt-6 w-full [&>button]:flex-1 [&>button]:justify-center"
-        value={mode === 'magic' ? 'signin' : mode}
-        onChange={(v) => setMode(v)}
-        options={[
-          { value: 'signin', label: 'Sign in' },
-          { value: 'signup', label: 'Create account' },
-        ]}
-      />
 
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        {mode === 'signup' && (
-          <Field label="Full name">
-            <Input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Priya Sharma" className="h-10" />
-          </Field>
-        )}
         <Field label="Work email">
           <Input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@agency.com" className="h-10" />
         </Field>
@@ -109,7 +79,7 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
               required
               type="password"
               minLength={8}
-              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
@@ -118,7 +88,7 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
           </Field>
         )}
         <Button type="submit" variant="primary" size="lg" className="w-full justify-center" loading={loading}>
-          {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send magic link'}
+          {mode === 'signin' ? 'Sign in' : 'Send magic link'}
           {!loading && <ArrowRight />}
         </Button>
       </form>
@@ -133,6 +103,7 @@ export function LoginForm({ next, initialMode, linkError }: { next: string; init
       >
         <Mail /> {mode === 'magic' ? 'Use a password instead' : 'Email me a sign-in link'}
       </Button>
+      <p className="mt-5 text-center text-xs text-ink-3">No account? Ask your admin to create one for you.</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { BLOCK_IDS, FREQUENCIES, PLAN_TEMPLATE, STATUS_ORDER, TYPE_NAME } from '@/lib/constants';
@@ -338,19 +338,30 @@ export async function updateMember(id: string, patch: { full_name?: string; role
   });
 }
 
-export async function inviteMember(input: { email: string; fullName: string }) {
+/** Accounts are created by managers only — there is no public sign-up. */
+export async function createMember(input: { email: string; fullName: string; password: string; role: 'manager' | 'exec' }) {
   return run(async (ctx) => {
     await assertManager(ctx);
     const admin = createAdminClient();
-    if (!admin) throw new Error('Invites need SUPABASE_SERVICE_ROLE_KEY on the server.');
+    if (!admin) throw new Error('Creating users needs SUPABASE_SERVICE_ROLE_KEY on the server.');
     const email = text(input.email, 200).toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error('Enter a valid email address.');
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (await headers()).get('origin') || '';
-    const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { full_name: text(input.fullName, 120) },
-      redirectTo: `${origin}/auth/callback?next=/settings`,
+    if (typeof input.password !== 'string' || input.password.length < 8) throw new Error('Password must be at least 8 characters.');
+    if (input.role !== 'manager' && input.role !== 'exec') throw new Error('Unknown role.');
+    // The handle_new_user trigger only admits allowlisted emails (and consumes the entry).
+    must(await admin.from('signup_allowlist').upsert({ email }));
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password: input.password,
+      email_confirm: true,
+      user_metadata: { full_name: text(input.fullName, 120) },
+      app_metadata: { created_by: ctx.userId },
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      await admin.from('signup_allowlist').delete().eq('email', email);
+      throw new Error(error.message);
+    }
+    if (input.role === 'manager') must(await admin.from('profiles').update({ role: 'manager' }).eq('id', data.user.id));
     return { email };
   });
 }

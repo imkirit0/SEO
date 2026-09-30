@@ -30,10 +30,7 @@ export default async function Landing() {
           <GtecLogo />
           <div className="flex-1" />
           <ThemeToggle className="hidden sm:inline-flex" />
-          <Link href="/login" className="rounded-full border border-white/60 px-4 py-1.5 text-[13px] font-medium text-white transition hover:bg-white hover:text-nav">
-            Sign in
-          </Link>
-          <Link href="/login?mode=signup" className={buttonVariants({ variant: 'primary', size: 'sm' })}>Get started</Link>
+          <Link href="/login" className={buttonVariants({ variant: 'primary', size: 'sm' })}>Sign in</Link>
         </div>
       </header>
 
@@ -50,10 +47,9 @@ export default async function Landing() {
             backlink is accounted for.
           </p>
           <div className="mt-9 flex animate-rise flex-wrap justify-center gap-3">
-            <Link href="/login?mode=signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-              Open your desk <ArrowRight />
+            <Link href="/login" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+              Sign in to your desk <ArrowRight />
             </Link>
-            <Link href="/login" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>I have an account</Link>
           </div>
         </section>
 

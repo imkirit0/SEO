@@ -11,7 +11,7 @@ The operating desk for SEO retainers: live time tracking, 24 link-building track
 | **Monthly Plan** | 30-task standard retainer template, copy last month, inline editing, capacity allocation bar, W1–W4 status cycling |
 | **Dashboard** | Hours vs capacity, pace to month-end, daily hours chart, live timers, planned vs logged by block, output per person, CSV exports |
 | **Site Library** | Bulk paste domains with DA, normalisation and de-duplication, search |
-| **Team & Projects** | Roles (manager / executive), email invites, project capacity, daily quotas |
+| **Team & Projects** | Roles (manager / executive), manager-created accounts, project capacity, daily quotas |
 | **Everywhere** | Real-time sync between teammates, light/dark/system theme, mobile layout, row-level security |
 
 ## Setup
@@ -19,12 +19,11 @@ The operating desk for SEO retainers: live time tracking, 24 link-building track
 ### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste the contents of [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) and run it.
+2. Open **SQL Editor** and run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), then [`0002_admin_only_signup.sql`](supabase/migrations/0002_admin_only_signup.sql).
 3. **Authentication → URL Configuration**: set *Site URL* to `http://localhost:3000` (your production URL later) and add `http://localhost:3000/auth/callback` to *Redirect URLs*.
-4. Optional, for email invites: under **Authentication → Email Templates → Invite user**, change the link to  
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/settings`
+4. Set `SUPABASE_SERVICE_ROLE_KEY` on the server; managers need it to create accounts.
 
-> The **first account** created becomes a manager automatically. Everyone after that starts as an executive.
+> There is **no public sign-up**. The first account on an empty desk becomes a manager; after that, only managers can create accounts (Team & Projects → Create user). This is enforced in the database, not just the UI.
 
 ### 2. App
 
@@ -44,7 +43,14 @@ Deploy to Vercel (or any Node host), set the same environment variables, and add
 
 ## Accounts
 
-Logins for the team accounts (2 managers, 1 executive) are kept in `CREDENTIALS.local.md` on the setup machine. It is git-ignored and never pushed. Ask a manager for access, and change your temporary password after the first sign-in.
+Admin (manager) logins — temporary passwords, change them after the first sign-in (Settings → Password):
+
+| Email | Role | Password |
+| --- | --- | --- |
+| seo@gteceducation.com | Manager (admin) | `Gtec-h7OBUOBoH3Aa` |
+| gtm@gteceducation.com | Manager (admin) | `Gtec-MlJmT28atOMM` |
+
+The executive login is kept in `CREDENTIALS.local.md` on the setup machine (git-ignored).
 
 ## Project structure
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useTransition, type FormEvent, type KeyboardEvent } from 'react';
-import { FolderKanban, Mail, Plus, Target, Trash2, Users } from 'lucide-react';
-import { createProject, deleteProject, inviteMember, setQuota, updateMember, updateProject } from '@/app/actions';
+import { FolderKanban, Plus, Target, Trash2, UserPlus, Users } from 'lucide-react';
+import { createMember, createProject, deleteProject, setQuota, updateMember, updateProject } from '@/app/actions';
 import { act } from '@/lib/act';
 import { SUBMISSION_TYPES } from '@/lib/constants';
 import type { Profile, Project, Quota } from '@/lib/types';
@@ -14,16 +14,18 @@ import { Input } from '@/components/ui/field';
 import { Avatar } from '@/components/ui/misc';
 
 /* ---------------- team ---------------- */
-export function TeamPanel({ team, me, isManager, inviteEnabled }: { team: Profile[]; me: string; isManager: boolean; inviteEnabled: boolean }) {
+export function TeamPanel({ team, me, isManager, createEnabled }: { team: Profile[]; me: string; isManager: boolean; createEnabled: boolean }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'exec' | 'manager'>('exec');
   const [pending, start] = useTransition();
 
-  function onInvite(e: FormEvent) {
+  function onCreate(e: FormEvent) {
     e.preventDefault();
     start(async () => {
-      const res = await act(inviteMember({ email, fullName: name }), (d) => `Invite sent to ${d?.email}`);
-      if (res.ok) { setEmail(''); setName(''); }
+      const res = await act(createMember({ email, fullName: name, password, role }), (d) => `Account created for ${d?.email}`);
+      if (res.ok) { setEmail(''); setName(''); setPassword(''); setRole('exec'); }
     });
   }
 
@@ -40,16 +42,29 @@ export function TeamPanel({ team, me, isManager, inviteEnabled }: { team: Profil
       </div>
       {isManager && (
         <CardBody className="border-t border-line">
-          {inviteEnabled ? (
-            <form onSubmit={onInvite} className="flex flex-col gap-2 sm:flex-row">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="sm:w-40" />
-              <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@agency.com" className="flex-1" />
-              <Button type="submit" variant="primary" loading={pending}>{!pending && <Mail />} Invite</Button>
+          {createEnabled ? (
+            <form onSubmit={onCreate} className="grid gap-2 sm:grid-cols-2">
+              <p className="text-[13px] font-medium text-ink sm:col-span-2">Create user</p>
+              <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" autoComplete="off" />
+              <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@gteceducation.com" autoComplete="off" />
+              <Input required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 characters)" autoComplete="new-password" />
+              <select
+                aria-label="Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value as 'exec' | 'manager')}
+                className="h-9 rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent"
+              >
+                <option value="exec">Executive</option>
+                <option value="manager">Manager (admin)</option>
+              </select>
+              <Button type="submit" variant="primary" loading={pending} className="justify-center sm:col-span-2">
+                {!pending && <UserPlus />} Create user
+              </Button>
+              <p className="text-xs text-ink-3 sm:col-span-2">Share the email and password with them directly. They can change the password in Settings.</p>
             </form>
           ) : (
             <p className="text-xs leading-relaxed text-ink-3">
-              Teammates join by creating an account on the sign-in page — they start as executives and you can promote them here.
-              Add <code className="rounded bg-surface-2 px-1 font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to send email invites instead.
+              Add <code className="rounded bg-surface-2 px-1 font-mono">SUPABASE_SERVICE_ROLE_KEY</code> on the server to create user accounts.
             </p>
           )}
         </CardBody>
