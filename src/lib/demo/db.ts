@@ -2,8 +2,6 @@
  * Demo mode: an in-memory, Supabase-shaped client used when no Supabase project is configured.
  * Covers the subset of the PostgREST query builder this app uses. Data resets on server restart.
  */
-import { PLAN_TEMPLATE, SUBMISSION_TYPES } from '@/lib/constants';
-import { pad, shiftMonth, todayIn, weekOfMonth } from '@/lib/utils';
 
 type Row = Record<string, any>;
 type Tables = Record<string, Row[]>;
@@ -20,134 +18,18 @@ export const DEMO_USER = {
 };
 
 /* ============================ seed data ============================ */
-function mulberry32(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const clock = (mins: number) => `${pad(Math.floor(mins / 60) % 24)}:${pad(mins % 60)}:00`;
-
+// Starts empty — just the demo user and the default daily quotas (same as the SQL migration).
 function seed(): Tables {
-  const r = mulberry32(20260915);
-  const int = (a: number, b: number) => a + Math.floor(r() * (b - a + 1));
-  const pick = <T,>(arr: readonly T[]) => arr[Math.floor(r() * arr.length)];
-
-  const today = todayIn();
-  const month = today.slice(0, 7);
-  const todayNum = Number(today.slice(8, 10));
-  const iso = (day: string, mins: number) => `${day}T${clock(mins).slice(0, 8)}.000Z`;
-
-  const profiles: Row[] = [
-    { id: DEMO_USER.id, full_name: 'Alex Morgan', email: DEMO_USER.email, role: 'manager' },
-    { id: 'demo-priya', full_name: 'Priya Sharma', email: 'priya@demo.desk', role: 'exec' },
-    { id: 'demo-arjun', full_name: 'Arjun Mehta', email: 'arjun@demo.desk', role: 'exec' },
-    { id: 'demo-meera', full_name: 'Meera Iyer', email: 'meera@demo.desk', role: 'exec' },
-  ].map((p) => ({ ...p, created_at: `${shiftMonth(month, -6)}-01T09:00:00.000Z` }));
-  const members = profiles.map((p) => p.id);
-
-  const projects: Row[] = [
-    { id: 'demo-northwind', name: 'Northwind Dental', client: 'Northwind Dental Care', hrs_per_day: 7.25, days_per_month: 26 },
-    { id: 'demo-lumen', name: 'Lumen Interiors', client: 'Lumen Studio', hrs_per_day: 4, days_per_month: 22 },
-  ].map((p, i) => ({ ...p, created_at: `${shiftMonth(month, -3)}-0${i + 1}T09:00:00.000Z` }));
-
-  const A = ['bright', 'urban', 'nova', 'peak', 'clear', 'swift', 'blue', 'prime', 'open', 'true', 'green', 'smart', 'north', 'pixel', 'cloud', 'silver', 'rapid', 'bold', 'fresh', 'daily'];
-  const B = ['hub', 'list', 'mark', 'spot', 'link', 'base', 'post', 'board', 'press', 'wire', 'nest', 'point', 'works', 'guide', 'zone', 'finder', 'index', 'share', 'feed', 'desk'];
-  const TLD = ['com', 'net', 'org', 'io', 'co', 'info', 'biz'];
-  const sites: Row[] = [];
-  for (const t of SUBMISSION_TYPES) {
-    const seen = new Set<string>();
-    const n = t.id === 'social-bookmarking' ? 90 : int(14, 55);
-    while (seen.size < n) seen.add(`${pick(A)}${pick(B)}.${t.id === 'gov-sites' ? 'gov' : pick(TLD)}`);
-    for (const url of seen) {
-      sites.push({
-        id: crypto.randomUUID(), type: t.id, url, da: r() < 0.1 ? null : int(8, 95),
-        created_by: pick(members), created_at: `${month}-01T08:00:00.000Z`,
-      });
-    }
-  }
-
-  const quotas: Row[] = [
-    { type: 'social-bookmarking', per_day: 30 },
-    { type: 'classified-submission', per_day: 2 },
-    { type: 'directory-submission', per_day: 2 },
-    { type: 'blog-submission', per_day: 2 },
-  ];
-
-  const plan_tasks: Row[] = [];
-  const currentWeek = weekOfMonth(today);
-  projects.forEach((p, pi) => {
-    for (const [m, isPrev] of [[shiftMonth(month, -1), true], [month, false]] as const) {
-      PLAN_TEMPLATE.forEach(([block, freq, task, minutes, rate, notes], position) => {
-        if (pi === 1 && position % 2) return;
-        const weeks = [0, 1, 2, 3].map((w) => {
-          if (isPrev) return r() < 0.9 ? 'done' : 'block';
-          if (w < currentWeek) return r() < 0.8 ? 'done' : r() < 0.6 ? 'prog' : 'block';
-          if (w === currentWeek) return r() < 0.35 ? 'done' : r() < 0.6 ? 'prog' : 'pend';
-          return 'pend';
-        });
-        plan_tasks.push({
-          id: crypto.randomUUID(), project_id: p.id, month: m, block, freq, task,
-          minutes: pi === 1 ? Math.round(minutes / 2) : minutes, rate, notes, weeks, position,
-          created_at: `${m}-01T09:00:00.000Z`,
-        });
-      });
-    }
-  });
-
-  const time_entries: Row[] = [];
-  for (let d = 1; d <= todayNum; d++) {
-    const day = `${month}-${pad(d)}`;
-    if (new Date(`${day}T00:00:00Z`).getUTCDay() === 0) continue;
-    for (const member of members) {
-      let at = int(9 * 60, 10 * 60);
-      const count = d === todayNum ? 2 : int(3, 6);
-      for (let i = 0; i < count; i++) {
-        const [block, , task] = pick(PLAN_TEMPLATE);
-        const minutes = int(6, 24) * 5;
-        time_entries.push({
-          id: crypto.randomUUID(), member_id: member, project_id: r() < 0.75 ? 'demo-northwind' : 'demo-lumen',
-          day, task, block, start_time: clock(at), end_time: clock(at + minutes), minutes,
-          status: d === todayNum && i === count - 1 ? 'prog' : r() < 0.93 ? 'done' : 'block',
-          created_at: iso(day, at),
-        });
-        at += minutes + int(0, 4) * 5;
-      }
-    }
-  }
-
-  const submissions: Row[] = [];
-  const active = new Set(['social-bookmarking', 'classified-submission', 'directory-submission', 'blog-submission', 'profile-creation', 'article-submission', 'image-submission', 'web-2-0', 'forum-posting']);
-  for (const project of projects) {
-    for (const site of sites) {
-      if (!active.has(site.type)) continue;
-      if (r() > (project.id === 'demo-northwind' ? 0.55 : 0.2)) continue;
-      const d = int(1, todayNum);
-      const day = `${month}-${pad(d)}`;
-      const member = d === todayNum && r() < 0.6 ? DEMO_USER.id : pick(members);
-      const start = int(10 * 60, 17 * 60);
-      submissions.push({
-        id: crypto.randomUUID(), member_id: member, project_id: project.id, site_id: site.id, type: site.type,
-        day, month, start_time: clock(start), end_time: clock(start + int(4, 14)),
-        status: r() < 0.08 ? 'block' : 'done', created_at: iso(day, start),
-      });
-    }
-  }
-
-  const now = Date.now();
-  const active_timers: Row[] = [
-    { member_id: 'demo-priya', task: 'Reels (2 per week)', block: 'smm', project_id: 'demo-northwind', minsAgo: 25 },
-    { member_id: 'demo-arjun', task: 'Social bookmarking', block: 'seo', project_id: 'demo-northwind', minsAgo: 70 },
-  ].map(({ minsAgo, ...t }) => {
-    const started = new Date(now - minsAgo * 60000);
-    return { ...t, day: today, start_label: `${pad(started.getHours())}:${pad(started.getMinutes())}`, started_at: started.toISOString() };
-  });
-
-  return { profiles, projects, sites, quotas, plan_tasks, time_entries, submissions, active_timers };
+  return {
+    profiles: [{ id: DEMO_USER.id, full_name: DEMO_USER.user_metadata.full_name, email: DEMO_USER.email, role: 'manager', created_at: DEMO_USER.created_at }],
+    projects: [], sites: [], plan_tasks: [], time_entries: [], submissions: [], active_timers: [],
+    quotas: [
+      { type: 'social-bookmarking', per_day: 30 },
+      { type: 'classified-submission', per_day: 2 },
+      { type: 'directory-submission', per_day: 2 },
+      { type: 'blog-submission', per_day: 2 },
+    ],
+  };
 }
 
 const store = globalThis as unknown as { __demoDb?: Tables };
